@@ -1,0 +1,1025 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "API Testing Assignment - 10Pearls",
+		"description": "Comprehensive API testing collection demonstrating all HTTP methods, variable handling, assertions, and API chaining",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Environment Setup",
+			"item": [
+				{
+					"name": "Health Check - Restful API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Basic health check for Restful API",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"console.log(\"Restful API Health Check Completed\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restful}}/objects",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Restful API Tests",
+			"item": [
+				{
+					"name": "GET - All Objects",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Response body:\", responseJson);",
+									"console.log(\"Number of objects:\", responseJson.length);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response contains objects\", function () {",
+									"    pm.expect(responseJson.length).to.be.above(0);",
+									"});",
+									"",
+									"// Store first object ID for chaining",
+									"if (responseJson.length > 0) {",
+									"    pm.environment.set(\"first_object_id\", responseJson[0].id);",
+									"    console.log(\"Stored first object ID:\", responseJson[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restful}}/objects",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create Object",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate random data for request body",
+									"const randomName = \"Device_\" + Math.random().toString(36).substring(2, 8);",
+									"const randomYear = Math.floor(Math.random() * (2024 - 2000) + 2000);",
+									"const randomPrice = parseFloat((Math.random() * 1000 + 100).toFixed(2));",
+									"const randomColor = [\"red\", \"blue\", \"green\", \"black\", \"white\"][Math.floor(Math.random() * 5)];",
+									"",
+									"// Set variables for use in request",
+									"pm.environment.set(\"random_name\", randomName);",
+									"pm.environment.set(\"random_year\", randomYear);",
+									"pm.environment.set(\"random_price\", randomPrice);",
+									"pm.environment.set(\"random_color\", randomColor);",
+									"",
+									"console.log(\"Generated random data:\", {",
+									"    name: randomName,",
+									"    year: randomYear,",
+									"    price: randomPrice,",
+									"    color: randomColor",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Created object:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has required fields\", function () {",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson).to.have.property('name');",
+									"    pm.expect(responseJson).to.have.property('createdAt');",
+									"});",
+									"",
+									"pm.test(\"Created object has correct name\", function () {",
+									"    pm.expect(responseJson.name).to.equal(pm.environment.get(\"random_name\"));",
+									"});",
+									"",
+									"// Store created object ID for chaining",
+									"pm.environment.set(\"created_object_id\", responseJson.id);",
+									"console.log(\"Stored created object ID:\", responseJson.id);",
+									"",
+									"// Intentional failing test case",
+									"pm.test(\"Intentional Failing Test - Price should be negative (This will fail)\", function () {",
+									"    pm.expect(responseJson.data.price).to.be.below(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"name\": \"{{random_name}}\",\n   \"data\": {\n      \"year\": {{random_year}},\n      \"price\": {{random_price}},\n      \"CPU model\": \"Intel Core i9\",\n      \"Hard disk size\": \"1 TB\",\n      \"color\": \"{{random_color}}\"\n   }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_restful}}/objects",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Single Object (Chained)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Retrieved object:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Object ID matches created object\", function () {",
+									"    pm.expect(responseJson.id).to.equal(pm.environment.get(\"created_object_id\"));",
+									"});",
+									"",
+									"pm.test(\"Object has data property\", function () {",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restful}}/objects/{{created_object_id}}",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects",
+								"{{created_object_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT - Update Object (Complete)",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate new random data for complete update",
+									"const newName = \"Updated_\" + Math.random().toString(36).substring(2, 8);",
+									"const newYear = Math.floor(Math.random() * (2024 - 2020) + 2020);",
+									"const newPrice = parseFloat((Math.random() * 2000 + 500).toFixed(2));",
+									"",
+									"pm.environment.set(\"updated_name\", newName);",
+									"pm.environment.set(\"updated_year\", newYear);",
+									"pm.environment.set(\"updated_price\", newPrice);",
+									"",
+									"console.log(\"Generated update data:\", {",
+									"    name: newName,",
+									"    year: newYear,",
+									"    price: newPrice",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Updated object:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Object was updated with new name\", function () {",
+									"    pm.expect(responseJson.name).to.equal(pm.environment.get(\"updated_name\"));",
+									"});",
+									"",
+									"pm.test(\"Response has updatedAt field\", function () {",
+									"    pm.expect(responseJson).to.have.property('updatedAt');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"name\": \"{{updated_name}}\",\n   \"data\": {\n      \"year\": {{updated_year}},\n      \"price\": {{updated_price}},\n      \"CPU model\": \"Intel Core i7\",\n      \"Hard disk size\": \"2 TB\",\n      \"color\": \"silver\"\n   }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_restful}}/objects/{{created_object_id}}",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects",
+								"{{created_object_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PATCH - Partial Update",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate data for partial update",
+									"const newColor = [\"gold\", \"platinum\", \"bronze\", \"copper\"][Math.floor(Math.random() * 4)];",
+									"pm.environment.set(\"patch_color\", newColor);",
+									"",
+									"console.log(\"Patch color:\", newColor);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Patched object:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Object has updatedAt field\", function () {",
+									"    pm.expect(responseJson).to.have.property('updatedAt');",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"data\": {\n      \"color\": \"{{patch_color}}\",\n      \"Hard disk size\": \"4 TB\"\n   }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_restful}}/objects/{{created_object_id}}",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects",
+								"{{created_object_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Remove Object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Log deletion",
+									"console.log(\"Deleting object with ID:\", pm.environment.get(\"created_object_id\"));",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"// Clean up environment variable",
+									"pm.environment.unset(\"created_object_id\");",
+									"console.log(\"Cleaned up created_object_id variable\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restful}}/objects/{{created_object_id}}",
+							"host": [
+								"{{base_url_restful}}"
+							],
+							"path": [
+								"objects",
+								"{{created_object_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Simple Books API Tests",
+			"item": [
+				{
+					"name": "GET - All Books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Books response:\", responseJson);",
+									"console.log(\"Number of books:\", responseJson.length);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Books have required properties\", function () {",
+									"    responseJson.forEach(book => {",
+									"        pm.expect(book).to.have.property('id');",
+									"        pm.expect(book).to.have.property('name');",
+									"        pm.expect(book).to.have.property('available');",
+									"    });",
+									"});",
+									"",
+									"// Store available book for ordering",
+									"const availableBook = responseJson.find(book => book.available === true);",
+									"if (availableBook) {",
+									"    pm.environment.set(\"available_book_id\", availableBook.id);",
+									"    console.log(\"Found available book:\", availableBook.name, \"ID:\", availableBook.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_books}}/books",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register API Client",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate random client data",
+									"const randomName = \"TestClient_\" + Math.random().toString(36).substring(2, 8);",
+									"const randomEmail = \"test_\" + Math.random().toString(36).substring(2, 8) + \"@example.com\";",
+									"",
+									"pm.environment.set(\"client_name\", randomName);",
+									"pm.environment.set(\"client_email\", randomEmail);",
+									"",
+									"console.log(\"Generated client data:\", {",
+									"    name: randomName,",
+									"    email: randomEmail",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Client registration response:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains access token\", function () {",
+									"    pm.expect(responseJson).to.have.property('accessToken');",
+									"});",
+									"",
+									"// Store access token for subsequent requests",
+									"pm.environment.set(\"access_token\", responseJson.accessToken);",
+									"console.log(\"Stored access token for API authentication\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"clientName\": \"{{client_name}}\",\n   \"clientEmail\": \"{{client_email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_books}}/api-clients/",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"api-clients",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Order Book",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate random customer name",
+									"const customerName = \"Customer_\" + Math.random().toString(36).substring(2, 8);",
+									"pm.environment.set(\"customer_name\", customerName);",
+									"",
+									"console.log(\"Customer name:\", customerName);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Order response:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains order details\", function () {",
+									"    pm.expect(responseJson).to.have.property('orderId');",
+									"    pm.expect(responseJson).to.have.property('created');",
+									"});",
+									"",
+									"// Store order ID for chaining",
+									"pm.environment.set(\"order_id\", responseJson.orderId);",
+									"console.log(\"Stored order ID:\", responseJson.orderId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookId\": {{available_book_id}},\n  \"customerName\": \"{{customer_name}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_books}}/orders",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - All Orders",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Orders response:\", responseJson);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Orders contain required fields\", function () {",
+									"    responseJson.forEach(order => {",
+									"        pm.expect(order).to.have.property('id');",
+									"        pm.expect(order).to.have.property('bookId');",
+									"        pm.expect(order).to.have.property('customerName');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url_books}}/orders",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PATCH - Update Order",
+					"event": [
+						{
+							"listen": "pre-request",
+							"script": {
+								"exec": [
+									"// Generate new customer name for update",
+									"const newCustomerName = \"Updated_\" + Math.random().toString(36).substring(2, 8);",
+									"pm.environment.set(\"new_customer_name\", newCustomerName);",
+									"",
+									"console.log(\"New customer name:\", newCustomerName);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Log update attempt",
+									"console.log(\"Updating order ID:\", pm.environment.get(\"order_id\"));",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerName\": \"{{new_customer_name}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_books}}/orders/{{order_id}}",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"orders",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Cancel Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Log deletion",
+									"console.log(\"Deleting order ID:\", pm.environment.get(\"order_id\"));",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"// Clean up variables",
+									"pm.environment.unset(\"order_id\");",
+									"pm.environment.unset(\"access_token\");",
+									"console.log(\"Cleaned up order and authentication variables\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url_books}}/orders/{{order_id}}",
+							"host": [
+								"{{base_url_books}}"
+							],
+							"path": [
+								"orders",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "REST Countries Tests",
+			"item": [
+				{
+					"name": "GET - All Countries",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Number of countries:\", responseJson.length);",
+									"console.log(\"First country:\", responseJson[0].name.common);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Countries have required properties\", function () {",
+									"    const sampleCountry = responseJson[0];",
+									"    pm.expect(sampleCountry).to.have.property('name');",
+									"    pm.expect(sampleCountry).to.have.property('capital');",
+									"    pm.expect(sampleCountry).to.have.property('region');",
+									"});",
+									"",
+									"// Store random country for further testing",
+									"const randomIndex = Math.floor(Math.random() * Math.min(10, responseJson.length));",
+									"const randomCountry = responseJson[randomIndex];",
+									"pm.environment.set(\"random_country_name\", randomCountry.name.common);",
+									"pm.environment.set(\"random_country_region\", randomCountry.region);",
+									"",
+									"console.log(\"Selected random country:\", randomCountry.name.common, \"in\", randomCountry.region);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_countries}}/v3.1/all?fields=name,capital,region,population",
+							"host": [
+								"{{base_url_countries}}"
+							],
+							"path": [
+								"v3.1",
+								"all"
+							],
+							"query": [
+								{
+									"key": "fields",
+									"value": "name,capital,region,population"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Country by Name (Chained)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Country details:\", responseJson[0]);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Country name matches requested\", function () {",
+									"    pm.expect(responseJson[0].name.common.toLowerCase()).to.include(pm.environment.get(\"random_country_name\").toLowerCase());",
+									"});",
+									"",
+									"pm.test(\"Country has detailed information\", function () {",
+									"    const country = responseJson[0];",
+									"    pm.expect(country).to.have.property('name');",
+									"    pm.expect(country).to.have.property('capital');",
+									"    pm.expect(country).to.have.property('population');",
+									"});",
+									"",
+									"// Failing test case example",
+									"pm.test(\"Intentional Failing Test - Population should be exactly 1000 (This will fail)\", function () {",
+									"    pm.expect(responseJson[0].population).to.equal(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_countries}}/v3.1/name/{{random_country_name}}",
+							"host": [
+								"{{base_url_countries}}"
+							],
+							"path": [
+								"v3.1",
+								"name",
+								"{{random_country_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Countries by Region (Chained)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON response",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Log response data",
+									"console.log(\"Countries in region:\", pm.environment.get(\"random_country_region\"));",
+									"console.log(\"Number of countries in region:\", responseJson.length);",
+									"",
+									"// Chai assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All countries belong to the same region\", function () {",
+									"    const targetRegion = pm.environment.get(\"random_country_region\");",
+									"    responseJson.forEach(country => {",
+									"        pm.expect(country.region).to.equal(targetRegion);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Region has multiple countries\", function () {",
+									"    pm.expect(responseJson.length).to.be.above(1);",
+									"});",
+									"",
+									"// Clean up environment variables",
+									"pm.environment.unset(\"random_country_name\");",
+									"pm.environment.unset(\"random_country_region\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_countries}}/v3.1/region/{{random_country_region}}",
+							"host": [
+								"{{base_url_countries}}"
+							],
+							"path": [
+								"v3.1",
+								"region",
+								"{{random_country_region}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log(\"=== Starting API Test ===\");",
+					"console.log(\"Request:\", pm.info.requestName);",
+					"console.log(\"Method:\", pm.request.method);",
+					"console.log(\"URL:\", pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"console.log(\"=== Test Completed ===\");",
+					"console.log(\"Status:\", pm.response.status);",
+					"console.log(\"Response time:\", pm.response.responseTime + \"ms\");",
+					"console.log(\"========================\");"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "collection_version",
+			"value": "1.0.0",
+			"type": "string"
+		}
+	]
+}
